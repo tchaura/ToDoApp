@@ -1,40 +1,96 @@
 @model IEnumerable<TodoItem>
 
-<h2>To-Do List</h2>
+<h2 class="text-center my-4">To-Do List</h2>
 
-<form asp-action="Create" method="post">
-    <input type="text" name="description" placeholder="Add a new task..." />
-    <button type="submit">Add</button>
-</form>
+<div class="container">
+    <form asp-action="Create" method="post" class="input-group mb-3">
+        <input type="text" id="createTaskInput" name="description" class="form-control" placeholder="Add a new task..." />
+        <button type="submit" id="createTaskButton" class="btn btn-primary rounded-end">Add</button>
+    </form>
 
-<ul>
-    @foreach (var item in Model.OrderBy(item => item.IsCompleted).ThenBy(item => item.CreatedAt))
-    {
-        <li>
-            @if (item.IsCompleted)
+    <ul class="list-group">
+        @foreach (var item in Model.Where(item => !item.IsCompleted).OrderBy(item => item.CreatedAt))
+        {
+            <li class="list-group-item align-items-center">
+                <span class="task-desc">@item.Description</span>
+                
+                <button class="btn btn-sm btn-link edit-btn">Edit</button>
+
+                <form asp-action="Edit" method="post" class="edit-form" style="display:none;">
+                    <input type="hidden" name="id" class="input-group" value="@item.Id" />
+                    <input name="description" class="edit-input" value="@item.Description" />
+                    <button type="submit" class="btn btn-sm btn-link">Save</button>
+                    <button type="button" class="btn btn-sm btn-link cancel-btn">Cancel</button>
+                </form>
+                
+                <form asp-action="Complete" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <button type="submit" class="btn btn-sm btn-link">@if(item.IsCompleted) {@Html.Raw("Undo")} else {@Html.Raw("Complete")}</button>
+                </form>
+                
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <button type="submit" class="btn btn-sm btn-link">Delete</button>
+                </form>
+                
+                <span class="text-muted float-end mt-1">Created on: @item.CreatedAt</span>
+            </li>
+        }
+    </ul>
+
+    <button class="btn btn-link mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#completedTasks" aria-expanded="false" aria-controls="completedTasks">
+        Show Completed Tasks
+    </button>
+
+    <div class="collapse" id="completedTasks">
+        <ul class="list-group mt-3">
+            @foreach (var item in Model.Where(item => item.IsCompleted).OrderBy(item => item.CreatedAt))
             {
-                <s>@item.Description</s> <span>(Created on: @item.CreatedAt)</span>
+                <li class="list-group-item list-group-item-secondary">
+                    <s>@item.Description</s>
+                    
+                    <form asp-action="Complete" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-sm btn-link">@if(item.IsCompleted) {@Html.Raw("Undo")} else {@Html.Raw("Complete")}</button>
+                    </form>
+
+                    <form asp-action="Delete" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-sm btn-link">Delete</button>
+                    </form>
+                    <span class="text-muted mt-1 float-end">Created on: @item.CreatedAt</span>
+                </li>
             }
-            else
-            {
-                @item.Description <span>(Created on: @item.CreatedAt)</span>
-            }
+        </ul>
+    </div>
+</div>
 
-            <form asp-action="Complete" method="post" style="display:inline;">
-                <input type="hidden" name="id" value="@item.Id" />
-                <button type="submit">@if(item.IsCompleted) {@Html.Raw("Undo")} else {@Html.Raw("Complete")}</button>
-            </form>
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelector("#createTaskInput").focus();
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    let li = this.closest('li');
+                    let taskDesc = li.querySelector('.task-desc')
+                    taskDesc.style.display = 'none';
+                    let editInput = li.querySelector('.edit-input') 
+                    editInput.style.display = 'inline';
+                    editInput.value = taskDesc.innerText; 
+                    this.style.display = 'none';
+                    li.querySelector('.edit-form').style.display = 'inline';
+                });
+            });
 
-            <form asp-action="Edit" method="post" style="display:inline;">
-                <input type="hidden" name="id" value="@item.Id" />
-                <input type="text" name="description" placeholder="Edit task..." value="@item.Description" />
-                <button type="submit">Edit</button>
-            </form>
-
-            <form asp-action="Delete" method="post" style="display:inline;">
-                <input type="hidden" name="id" value="@item.Id" />
-                <button type="submit">Delete</button>
-            </form>
-        </li>
-    }
-</ul>
+            document.querySelectorAll('.cancel-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    let li = this.closest('li');
+                    li.querySelector('.task-desc').style.display = 'inline';
+                    li.querySelector('.edit-input').style.display = 'none';
+                    li.querySelector('.edit-form').style.display = 'none';
+                    li.querySelector('.edit-btn').style.display = 'inline';
+                });
+            });
+        });
+    </script>
+}
