@@ -1,0 +1,40 @@
+@model IEnumerable<TodoItem>
+
+<h2>To-Do List</h2>
+
+<form asp-action="Create" method="post">
+    <input type="text" name="description" placeholder="Add a new task..." />
+    <button type="submit">Add</button>
+</form>
+
+<ul>
+    @foreach (var item in Model.OrderBy(item => item.IsCompleted).ThenBy(item => item.CreatedAt))
+    {
+        <li>
+            @if (item.IsCompleted)
+            {
+                <s>@item.Description</s> <span>(Created on: @item.CreatedAt)</span>
+            }
+            else
+            {
+                @item.Description <span>(Created on: @item.CreatedAt)</span>
+            }
+
+            <form asp-action="Complete" method="post" style="display:inline;">
+                <input type="hidden" name="id" value="@item.Id" />
+                <button type="submit">@if(item.IsCompleted) {@Html.Raw("Undo")} else {@Html.Raw("Complete")}</button>
+            </form>
+
+            <form asp-action="Edit" method="post" style="display:inline;">
+                <input type="hidden" name="id" value="@item.Id" />
+                <input type="text" name="description" placeholder="Edit task..." value="@item.Description" />
+                <button type="submit">Edit</button>
+            </form>
+
+            <form asp-action="Delete" method="post" style="display:inline;">
+                <input type="hidden" name="id" value="@item.Id" />
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+    }
+</ul>
