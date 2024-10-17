@@ -1,0 +1,29 @@
+@model IEnumerable<TodoItem>
+
+@foreach (var item in Model)
+{
+    <li class="list-group-item align-items-center">
+        <span class="task-desc">@item.Description</span>
+        
+        <button class="btn btn-sm btn-link edit-btn">Edit</button>
+
+        <form asp-action="Edit" method="post" class="edit-form" style="display:none;">
+            <input type="hidden" name="id" class="input-group" value="@item.Id" />
+            <input name="description" class="edit-input form-control-plaintext col col-md-2" value="@item.Description" />
+            <button type="submit" class="btn btn-sm btn-link">Save</button>
+            <button type="button" class="btn btn-sm btn-link cancel-btn">Cancel</button>
+        </form>
+
+        <form asp-action="Complete"  method="post" class="d-inline complete-form">
+            <input type="hidden" name="id" value="@item.Id" />
+            <button type="submit" class="btn btn-sm btn-link text-success">@if(item.IsCompleted) {@Html.Raw("Undo")} else {@Html.Raw("Complete")}</button>
+        </form>
+
+        <form asp-action="Delete" method="post" class="d-inline delete-form">
+            <input type="hidden" name="id" value="@item.Id" />
+            <button type="submit" class="btn btn-sm btn-link text-danger">Delete</button>
+        </form>
+        
+        <span class="text-muted float-end mt-1">Created on: @item.CreatedAt</span>
+    </li>
+}

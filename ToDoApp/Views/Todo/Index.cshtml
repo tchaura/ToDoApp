@@ -1,0 +1,114 @@
+@model IEnumerable<TodoItem>
+
+<h2 class="text-center my-4">To-Do List</h2>
+
+<div class="container">
+    <form id="createForm" class="input-group mb-3">
+        <input type="text" id="createTaskInput" name="description" class="form-control" placeholder="Add a new task..." />
+        <button type="submit" id="createTaskButton" class="btn btn-primary rounded-end">Add</button>
+    </form>
+
+    <ul id="taskList" class="list-group">
+        @Html.Partial("_TodoListPartial", Model.Where(item => !item.IsCompleted).OrderBy(item => item.CreatedAt))
+    </ul>
+
+    <button class="btn btn-link mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#completedTasks" aria-expanded="false" aria-controls="completedTasks">
+        Show Completed Tasks
+    </button>
+
+    <div class="collapse" id="completedTasks">
+        <ul id="completedTaskList" class="list-group mt-3">
+            @Html.Partial("_TodoListPartial", Model.Where(item => item.IsCompleted).OrderBy(item => item.CreatedAt))
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const taskList = document.getElementById("taskList");
+            const completedTaskList = document.getElementById("completedTaskList");
+
+            function refreshTaskList(url, target) {
+                fetch(url)
+                    .then(response => response.text())
+                    .then(html => {
+                        target.innerHTML = html;
+                        bindEventListeners();
+                    });
+            }
+
+            document.getElementById("createForm").addEventListener('submit', function (e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                fetch('/Todo/Create', {
+                    method: 'POST',
+                    body: formData
+                }).then(() => refreshTaskList('/Todo/GetActiveTasks', taskList));
+                this.reset();
+            });
+
+            function bindEventListeners() {
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        let li = this.closest('li');
+                        li.querySelector('.task-desc').style.display = 'none';
+                        li.querySelector('.edit-form').style.display = 'inline';
+                        this.style.display = 'none';
+                    });
+                });
+                
+                document.querySelectorAll('.cancel-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        let li = this.closest('li');
+                        li.querySelector('.task-desc').style.display = 'inline';
+                        li.querySelector('.edit-form').style.display = 'none';
+                        li.querySelector('.edit-btn').style.display = 'inline';
+                    });
+                });
+                
+                document.querySelectorAll('form.edit-form').forEach(form => {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault(); 
+                        let formData = new FormData(this);
+                        fetch('/Todo/Edit', {
+                            method: 'POST',
+                            body: formData
+                        }).then(() => refreshTaskList('/Todo/GetActiveTasks', taskList));
+                    });
+                });
+                
+                document.querySelectorAll('form.complete-form').forEach(form => {
+                    form.addEventListener('submit', function (e) {
+                    alert("this");
+                        e.preventDefault();
+                        let formData = new FormData(this);
+                        fetch('/Todo/Complete', {
+                            method: 'POST',
+                            body: formData
+                        }).then(() => {
+                            refreshTaskList('/Todo/GetActiveTasks', taskList);
+                            refreshTaskList('/Todo/GetCompletedTasks', completedTaskList);
+                        });
+                    });
+                });
+                
+                document.querySelectorAll('form.delete-form').forEach(form => {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        let formData = new FormData(this);
+                        fetch('/Todo/Delete', {
+                            method: 'POST',
+                            body: formData
+                        }).then(() => {
+                            refreshTaskList('/Todo/GetActiveTasks', taskList);
+                            refreshTaskList('/Todo/GetCompletedTasks', completedTaskList);
+                        });
+                    });
+                });
+            }
+            
+            bindEventListeners();
+        });
+    </script>
+}
