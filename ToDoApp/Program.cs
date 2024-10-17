@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using ToDoApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -36,3 +37,5 @@ app.MapControllerRoute(
     pattern: "{controller=Todo}/{action=Index}/{id?}");
 
 app.Run();
+
+public partial class Program { }
